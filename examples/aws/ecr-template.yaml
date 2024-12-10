@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create ECR repository for mayohr-auto-punch'
+
+Resources:
+  MayohrAutoPunchRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: mayohr-auto-punch
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+Outputs:
+  RepositoryUri:
+    Description: The URI of the ECR repository
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MayohrAutoPunchRepository}

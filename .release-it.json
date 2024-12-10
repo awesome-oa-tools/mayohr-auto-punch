@@ -3,6 +3,12 @@
     "@release-it/conventional-changelog": {
       "preset": "angular",
       "infile": "CHANGELOG.md"
+    },
+    "@release-it/bumper": {
+      "out": {
+        "file": ".github/workflows/docker-publish.yml",
+        "type": "text/plain"
+      }
     }
   },
   "npm": {

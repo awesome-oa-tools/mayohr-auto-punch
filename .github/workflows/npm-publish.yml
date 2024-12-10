@@ -10,9 +10,14 @@ on:
 jobs:
   publish-npm-package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    outputs:
+      version: ${{ steps.get_version.id }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -23,7 +28,7 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
       - name: Setup NodeJs
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -40,7 +45,8 @@ jobs:
         run: |
           npm install -g \
             release-it \
-            @release-it/conventional-changelog
+            @release-it/conventional-changelog \
+            @release-it/bumper
           git remote rm origin
           git remote add origin https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git fetch -p
@@ -50,3 +56,14 @@ jobs:
           cat ~/.npmrc || true
           npm whoami
           npm run release
+
+      - name: Get version
+        id: get_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Trigger Docker workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: trigger-docker-build
+          client-payload: '{"version": "${{ steps.get_version.outputs.version }}"}'

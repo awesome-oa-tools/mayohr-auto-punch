@@ -1,6 +1,5 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { authenticator } from "otplib";
-import { logger } from "../utils/logger";
 
 export class MayohrService {
   private browser: Browser | null = null;
@@ -12,7 +11,7 @@ export class MayohrService {
   private delay: number = 500;
 
   constructor(
-    private readonly headless: boolean = false,
+    private readonly headless: boolean = true,
     private readonly domain: string,
     private readonly username: string,
     password: string,
@@ -26,6 +25,20 @@ export class MayohrService {
     this.browser = await puppeteer.launch({
       headless: this.headless,
       defaultViewport: null,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage", // 防止內存不足問題
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process", // 重要！在 Lambda 中使用單進程模式
+        "--disable-extensions",
+        "--disable-dev-tools",
+        "--disable-software-rasterizer",
+        "--ignore-certificate-errors",
+        "--window-size=1920,1080",
+      ],
     });
     this.page = await this.browser.newPage();
   }
@@ -34,7 +47,7 @@ export class MayohrService {
     if (!this.page) throw new Error("Browser not initialized");
 
     try {
-      logger.info("開始登入...");
+      // console.debug("開始登入...");
 
       await this.page.goto(this.loginUrl);
 
@@ -70,20 +83,21 @@ export class MayohrService {
       }
       // 生成當前的 TOTP
       const totp = authenticator.generate(this.secret);
+      await this.page.waitForSelector("#idTxtBx_SAOTCC_OTC");
       await this.page.type("#idTxtBx_SAOTCC_OTC", totp);
       await this.page.click("input#idSubmit_SAOTCC_Continue");
 
       // 是否保持登入
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 4 * this.delay));
+      await this.page.waitForSelector("input#idBtn_Back");
       await this.page.click("input#idBtn_Back");
 
       // 等待登入完成
       await this.page.waitForNavigation();
 
-      logger.info("登入成功");
+      // console.debug("登入成功");
       return true;
     } catch (error) {
-      console.error("Login failed:", error);
       return false;
     }
   }
@@ -92,7 +106,7 @@ export class MayohrService {
     if (!this.page) throw new Error("Browser not initialized");
 
     try {
-      logger.info("開始打卡...");
+      // console.debug("開始打卡...");
       await new Promise((resolve) => setTimeout(resolve, 4 * this.delay));
       // 前往打卡頁面
       await this.page.goto(this.punchUrl, {
@@ -110,17 +124,16 @@ export class MayohrService {
           "div.v3-confirm-buttons>button.button.filled.buttonText"
         )) !== null
       ) {
-        logger.warn("已存在下班打卡紀錄，點擊覆蓋該筆打卡紀錄");
+        // console.debug("已存在下班打卡紀錄，點擊覆蓋該筆打卡紀錄");
         await new Promise((resolve) => setTimeout(resolve, 2 * this.delay));
         await this.page.click(
           "div.v3-confirm-buttons>button.button.filled.buttonText"
         );
       }
 
-      logger.info("打卡完成");
+      // console.debug("打卡完成");
       return true;
     } catch (error) {
-      console.error("Punch in failed:", error);
       return false;
     }
   }

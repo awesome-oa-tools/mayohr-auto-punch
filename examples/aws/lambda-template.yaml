@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "MayoHR Auto Punch Lambda Function"
+
+Parameters:
+  ImageUri:
+    Type: String
+    Description: "Your Docker image URI"
+  MsDomain:
+    Type: String
+    Description: "Your Microsoft domain"
+  MsUsername:
+    Type: String
+    Description: "Your Microsoft username"
+  TelegramEnabled:
+    Type: String
+    Description: "Enable Telegram notification?"
+    Default: "false"
+  TelegramChatId:
+    Type: String
+    Description: "Your Telegram chat ID"
+
+Resources:
+  MayohrAutoPunchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: mayohr-auto-punch
+      PackageType: Image
+      Code:
+        ImageUri: !Ref ImageUri
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 120
+      MemorySize: 768
+      # 添加 ARM 架構配置
+      Architectures:
+        - x86_64
+      ImageConfig:
+        Command:
+          - "index.handler"
+        EntryPoint:
+          - "/usr/local/lib/node_modules/aws-lambda-ric/bin/index.mjs"
+        WorkingDirectory: "/app/dist/function"
+      Environment:
+        Variables:
+          HEADLESS: "true"
+          MS_DOMAIN: !Ref MsDomain
+          MS_USERNAME: !Ref MsUsername
+          TELEGRAM_ENABLED: !Ref TelegramEnabled
+          TELEGRAM_CHAT_ID: !Ref TelegramChatId
+          NODE_DEBUG: ""
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mayohr-auto-punch/*
+
+  MorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-morning-punch
+      Description: "Trigger morning punch at 9:00 AM on weekdays"
+      ScheduleExpression: "cron(0 1 ? * MON-FRI *)" # UTC 1:00 = GMT+8 9:00
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: MorningPunchTarget
+
+  EveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-evening-punch
+      Description: "Trigger evening punch at 6:05 PM on weekdays"
+      ScheduleExpression: "cron(5 10 ? * MON-FRI *)" # UTC 10:05 = GMT+8 18:05
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: EveningPunchTarget
+
+  MorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt MorningPunchRule.Arn
+
+  EveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt EveningPunchRule.Arn
