@@ -3,7 +3,7 @@
 ## 安裝套件
 
 ```bash
-npm install mayohr-auto-punch
+npm install mayohr-auto-punch -S
 ```
 
 ## 使用套件
@@ -33,7 +33,9 @@ async function main() {
 
     // 打卡
     const isPunched = await mayohrService.punch();
-    if (isPunched) {
+    if (!isPunched) {
+      throw new Error('打卡失敗');
+    } else {
       console.log('打卡成功');
     }
   } catch (error) {
@@ -45,22 +47,4 @@ async function main() {
 }
 
 main();
-```
-
-# 環境變數設定
-
-```bash
-# Headless mode
-HEADLESS="true"
-
-# Microsoft account
-MS_DOMAIN="your-domain.com"
-MS_USERNAME="your-username@your-domain.com"
-MS_PASSWORD="your-password"
-MS_TOPT_SECRET="your-totp-secret"
-
-# Telegram notification (optional)
-TELEGRAM_ENABLED="true"
-TELEGRAM_BOT_TOKEN="your-bot-token"
-TELEGRAM_CHAT_ID="your-chat-id"
 ```

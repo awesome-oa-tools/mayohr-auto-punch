@@ -2,7 +2,7 @@
 
 import dotenv from "dotenv";
 import { MayohrService } from "../services/MayohrService";
-import { Holiday } from "../interfaces/Holiday";
+import { isHoliday } from '../utils/holiday';
 import { logger } from "../utils/logger";
 import { join } from "path";
 import { homedir } from "os";
@@ -20,47 +20,6 @@ try {
 }
 
 dotenv.config();
-
-async function getHolidays(year: number): Promise<Holiday[]> {
-  try {
-    const response = await fetch(
-      `https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/${year}.json`
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    logger.warn(`取得假日失敗: ${error}`);
-    logger.warn("僅計算是否為星期六,或星期日");
-    const holidays: Holiday[] = [];
-    for (let i = 0; i < 365; i++) {
-      const date = new Date(year, 0, i + 1);
-      const dayOfWeek = date.getDay();
-      const isHoliday = dayOfWeek === 6 || dayOfWeek === 0;
-      const description = isHoliday ? "假日" : "";
-      const holiday = {
-        date: date.toISOString().slice(0, 10).replace(/-/g, ""),
-        week: dayOfWeek === 0 ? "日" : dayOfWeek === 6 ? "六" : "一",
-        isHoliday,
-        description,
-      };
-      holidays.push(holiday);
-    }
-    return holidays;
-  }
-}
-
-async function isHoliday(date: Date): Promise<boolean> {
-  const year = date.getFullYear();
-  const holidays = await getHolidays(year);
-
-  // 格式化日期為 'YYYYMMDD' 格式
-  const formattedDate = date.toISOString().slice(0, 10).replace(/-/g, "");
-
-  const holiday = holidays.find((h) => h.date === formattedDate);
-  return holiday?.isHoliday ?? false;
-}
 
 async function main() {
   // 初始化通知服務

@@ -28,9 +28,8 @@ Resources:
       Code:
         ImageUri: !Ref ImageUri
       Role: !GetAtt LambdaExecutionRole.Arn
-      Timeout: 120
+      Timeout: 60
       MemorySize: 768
-      # 添加 ARM 架構配置
       Architectures:
         - x86_64
       ImageConfig:
