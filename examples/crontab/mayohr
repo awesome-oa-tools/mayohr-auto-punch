@@ -1,0 +1,6 @@
+# Mayohr Auto Punch
+# Punch in at 09:00 AM on weekdays
+0 9 * * 1-5 ~/.mayohr-auto-punch/crontab/mayohr-auto-punch.sh
+
+# Punch out at 18:05 PM on weekdays
+5 18 * * 1-5 ~/.mayohr-auto-punch/crontab/mayohr-auto-punch.sh

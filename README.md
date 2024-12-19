@@ -24,6 +24,26 @@ vi ~/.mayohr-auto-punch/.env
 npx --yes --quite mayohr-auto-punch@latest
 ```
 
+### Run the script with Crontab
+
+```bash
+# Download the crontab config
+mkdir -p ~/.mayohr-auto-punch/crontab && \
+  wget -O ~/.mayohr-auto-punch/crontab/mayohr-auto-punch.sh \
+    https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/examples/crontab/mayohr-auto-punch.sh && \
+  chmod +x ~/.mayohr-auto-punch/crontab/mayohr-auto-punch.sh && \
+  wget -O ~/.mayohr-auto-punch/crontab/mayohr \
+    https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/examples/crontab/mayohr
+
+# Add to existing crontab (this will merge with your existing crontab entries)
+crontab -l | cat - ~/.mayohr-auto-punch/crontab/mayohr | crontab -
+
+# Verify the crontab settings
+crontab -l
+
+# To remove crontab, run crontab -e
+```
+
 ### Run the script with PM2
 
 ```bash
