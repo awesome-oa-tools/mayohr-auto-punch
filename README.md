@@ -135,7 +135,7 @@ To enable Telegram notifications:
 1. Create a Telegram bot through [@BotFather](https://t.me/botfather)
 2. Create a Telegram Channel and add the bot to it as an admin
 3. Get Channel ID from https://api.telegram.org/bot<bot_token>/getUpdates
-3. Add the following to your `.env` file:
+3. Add the following to your `~/.mayohr-auto-punch/.env` file:
 
 ```bash
 TELEGRAM_ENABLED="true"
