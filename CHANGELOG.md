@@ -1,5 +1,7 @@
 
 
+## [1.0.44](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.0.43...1.0.44) (2024-12-19)
+
 ## [1.0.43](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.0.42...1.0.43) (2024-12-19)
 
 ## 1.0.42 (2024-12-19)
