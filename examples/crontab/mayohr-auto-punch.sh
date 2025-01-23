@@ -18,7 +18,10 @@ MAX_RETRIES=3
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-  if npx --yes --quiet mayohr-auto-punch@latest >> "$LOG_FILE" 2>&1; then
+  npx --yes --quiet mayohr-auto-punch@latest >> "$LOG_FILE" 2>&1
+
+  # 判斷 $LOG_FILE 倒數三行是否不包含 [ERROR]
+  if ! tail -n 3 "$LOG_FILE" | grep -q "ERROR"; then
     echo "Command executed successfully" >> "$LOG_FILE"
     exit 0
   else
