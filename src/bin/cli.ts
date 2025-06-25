@@ -38,7 +38,7 @@ async function main() {
   }
 
   const mayohrService = new MayohrService(
-    false,
+    process.env.HEADLESS === "true",
     process.env.MS_DOMAIN || "",
     process.env.MS_USERNAME || "",
     process.env.MS_PASSWORD || "",
