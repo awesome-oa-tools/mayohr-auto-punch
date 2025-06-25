@@ -1,5 +1,5 @@
 # Build stage
-FROM --platform=$TARGETPLATFORM ghcr.io/puppeteer/puppeteer:23 AS builder
+FROM --platform=$TARGETPLATFORM ghcr.io/puppeteer/puppeteer:24 AS builder
 WORKDIR /app
 
 USER root
@@ -23,7 +23,7 @@ RUN npm install
 RUN npm run build
 
 # Production stage
-FROM --platform=$TARGETPLATFORM ghcr.io/puppeteer/puppeteer:23 as production
+FROM --platform=$TARGETPLATFORM ghcr.io/puppeteer/puppeteer:24 as production
 WORKDIR /app
 
 # 從 builder 階段複製編譯後的文件和 package.json

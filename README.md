@@ -64,7 +64,7 @@ docker run --rm -it \
 
 ### Run the script with AWS Lambda
 
-| 請啟用 AWS 台北區域，否則打卡 IP 來自外國，會被 IT 警告
+> 請啟用 AWS 台北區域，否則登入公司帳號的 IP 來自外國，會被 IT 關切
 
 ```bash
 # Download the AWS template
