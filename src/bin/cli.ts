@@ -2,13 +2,13 @@
 
 import dotenv from "dotenv";
 import { MayohrService } from "../services/MayohrService";
-import { isHoliday } from '../utils/holiday';
+import { isHoliday } from "../utils/holiday";
 import { logger } from "../utils/logger";
 import { join } from "path";
 import { homedir } from "os";
 import { statSync } from "fs";
-import { TelegramService } from '../services/TelegramService';
-import { Notifier } from '../utils/notifier';
+import { TelegramService } from "../services/TelegramService";
+import { Notifier } from "../utils/notifier";
 
 try {
   const envPath = join(homedir(), ".mayohr-auto-punch", ".env");
@@ -38,7 +38,7 @@ async function main() {
   }
 
   const mayohrService = new MayohrService(
-    process.env.HEADLESS !== "false",
+    false,
     process.env.MS_DOMAIN || "",
     process.env.MS_USERNAME || "",
     process.env.MS_PASSWORD || "",

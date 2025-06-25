@@ -22,6 +22,12 @@ mkdir -p ~/.mayohr-auto-punch \
 vi ~/.mayohr-auto-punch/.env
 ```
 
+### Install puppeteer-chrome
+
+```bash
+npx puppeteer browsers install chrome
+```
+
 ### Run the script
 
 ```bash
@@ -48,21 +54,6 @@ crontab -l
 # To remove crontab, run crontab -e
 ```
 
-### Run the script with PM2
-
-```bash
-# Install PM2
-npm i -g pm2
-
-# Download the pm2 configs:
-wget -O ~/.mayohr-auto-punch/ecosystem.config.js \
-  https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/examples/pm2/ecosystem.config.js
-
-# Start the script with PM2:
-pm2 start ~/.mayohr-auto-punch/ecosystem.config.js \
-  && pm2 stop mayohr-morning-punch mayohr-evening-punch
-```
-
 ### Run the script with Docker
 
 ```bash
@@ -72,6 +63,8 @@ docker run --rm -it \
 ```
 
 ### Run the script with AWS Lambda
+
+| 請啟用 AWS 台北區域，否則打卡 IP 來自外國，會被 IT 警告
 
 ```bash
 # Download the AWS template
@@ -86,7 +79,7 @@ source ~/.mayohr-auto-punch/.env
 # Create SSM parameters for sensitive data
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --name "/mayohr-auto-punch/ms-password" \
   --value "${MS_PASSWORD}" \
   --type "SecureString" \
@@ -94,7 +87,7 @@ aws ssm put-parameter \
 
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --name "/mayohr-auto-punch/ms-totp-secret" \
   --value "${MS_TOPT_SECRET}" \
   --type "SecureString" \
@@ -102,7 +95,7 @@ aws ssm put-parameter \
 
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --name "/mayohr-auto-punch/telegram-bot-token" \
   --value "${TELEGRAM_BOT_TOKEN}" \
   --type "SecureString" \
@@ -111,14 +104,14 @@ aws ssm put-parameter \
 # Create the ecr stack
 aws cloudformation create-stack \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --stack-name mayohr-auto-punch-ecr \
   --template-body file://~/.mayohr-auto-punch/aws/ecr-template.yaml
 
 # Get ECR URI
 ECR_URI=$(aws cloudformation describe-stacks \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --stack-name mayohr-auto-punch-ecr \
   --query "Stacks[0].Outputs[?OutputKey=='RepositoryUri'].OutputValue" \
   --output text)
@@ -126,7 +119,7 @@ ECR_URI=$(aws cloudformation describe-stacks \
 # Login to ECR
 aws ecr get-login-password \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   | docker login \
     --username AWS \
     --password-stdin \
@@ -140,7 +133,7 @@ docker pull --platform linux/amd64 justintw/mayohr-auto-punch:latest \
 # Create the stack
 aws cloudformation create-stack \
   --no-cli-pager \
-  --region ap-northeast-1 \
+  --region ap-east-1 \
   --stack-name mayohr-auto-punch-lambda \
   --template-body file://~/.mayohr-auto-punch/aws/lambda-template.yaml \
   --parameters \

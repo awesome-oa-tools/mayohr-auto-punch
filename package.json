@@ -17,23 +17,23 @@
   "scripts": {
     "start": "ts-node src/bin/cli.ts",
     "build": "tsc",
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon src/bin/cli.ts",
     "prepare": "npm run build",
     "release": "release-it --ci"
   },
   "homepage": "https://github.com/awesome-oa-tools/mayohr-auto-punch",
   "dependencies": {
-    "@aws-sdk/client-ssm": "^3.714.0",
-    "dotenv": "^16.4.7",
+    "@aws-sdk/client-ssm": "^3.835.0",
+    "dotenv": "^16.5.0",
     "node-color-log": "^12.0.1",
     "npm": "^11.0.0",
     "otplib": "^12.0.1",
-    "puppeteer": "^23.10.2"
+    "puppeteer": "^24.10.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
-    "nodemon": "^3.1.7",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.8.3"
   }
 }
