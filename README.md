@@ -79,7 +79,7 @@ source ~/.mayohr-auto-punch/.env
 # Create SSM parameters for sensitive data
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --name "/mayohr-auto-punch/ms-password" \
   --value "${MS_PASSWORD}" \
   --type "SecureString" \
@@ -87,7 +87,7 @@ aws ssm put-parameter \
 
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --name "/mayohr-auto-punch/ms-totp-secret" \
   --value "${MS_TOPT_SECRET}" \
   --type "SecureString" \
@@ -95,7 +95,7 @@ aws ssm put-parameter \
 
 aws ssm put-parameter \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --name "/mayohr-auto-punch/telegram-bot-token" \
   --value "${TELEGRAM_BOT_TOKEN}" \
   --type "SecureString" \
@@ -104,14 +104,14 @@ aws ssm put-parameter \
 # Create the ecr stack
 aws cloudformation create-stack \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --stack-name mayohr-auto-punch-ecr \
   --template-body file://~/.mayohr-auto-punch/aws/ecr-template.yaml
 
 # Get ECR URI
 ECR_URI=$(aws cloudformation describe-stacks \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --stack-name mayohr-auto-punch-ecr \
   --query "Stacks[0].Outputs[?OutputKey=='RepositoryUri'].OutputValue" \
   --output text)
@@ -119,7 +119,7 @@ ECR_URI=$(aws cloudformation describe-stacks \
 # Login to ECR
 aws ecr get-login-password \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   | docker login \
     --username AWS \
     --password-stdin \
@@ -133,7 +133,7 @@ docker pull --platform linux/amd64 justintw/mayohr-auto-punch:latest \
 # Create the stack
 aws cloudformation create-stack \
   --no-cli-pager \
-  --region ap-east-1 \
+  --region ap-east-2 \
   --stack-name mayohr-auto-punch-lambda \
   --template-body file://~/.mayohr-auto-punch/aws/lambda-template.yaml \
   --parameters \
