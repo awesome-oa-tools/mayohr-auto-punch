@@ -1,6 +1,6 @@
 {
   "name": "mayohr-auto-punch",
-  "version": "1.0.55",
+  "version": "1.0.56",
   "description": "Automatic punch in/out system for mayohr",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
