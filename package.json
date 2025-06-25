@@ -26,12 +26,12 @@
     "@aws-sdk/client-ssm": "^3.835.0",
     "dotenv": "^16.5.0",
     "node-color-log": "^12.0.1",
-    "npm": "^11.0.0",
+    "npm": "^11.4.2",
     "otplib": "^12.0.1",
     "puppeteer": "^24.10.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
+    "@types/node": "^24.0.4",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

@@ -22,7 +22,7 @@ mkdir -p ~/.mayohr-auto-punch \
 vi ~/.mayohr-auto-punch/.env
 ```
 
-### Install puppeteer-chrome
+### Install puppeteer-chrome browser
 
 ```bash
 npx puppeteer browsers install chrome
