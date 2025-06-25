@@ -28,7 +28,7 @@ Resources:
       Code:
         ImageUri: !Ref ImageUri
       Role: !GetAtt LambdaExecutionRole.Arn
-      Timeout: 60
+      Timeout: 120
       MemorySize: 768
       Architectures:
         - x86_64
@@ -46,6 +46,14 @@ Resources:
           TELEGRAM_ENABLED: !Ref TelegramEnabled
           TELEGRAM_CHAT_ID: !Ref TelegramChatId
           NODE_DEBUG: ""
+      LoggingConfig:
+        LogGroup: !Ref MayohrAutoPunchLogGroup
+
+  MayohrAutoPunchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/mayohr-auto-punch"
+      RetentionInDays: 5
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -69,6 +77,17 @@ Resources:
                   - ssm:GetParameter
                 Resource:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mayohr-auto-punch/*
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/mayohr-auto-punch:*"
 
   MorningPunchRule:
     Type: AWS::Events::Rule
