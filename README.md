@@ -64,17 +64,24 @@ docker run --rm -it \
 
 ### Run the script with AWS Lambda
 
-> 請啟用 AWS 台北區域，否則登入公司帳號的 IP 來自外國，會被 IT 關切
+> 請使用 AWS 台北 ap-east-2 區域，否則登入公司帳號的 IP 來自外國，會被 IT 關切
 
 ```bash
+# Download the .env.example file:
+mkdir -p ~/.mayohr-auto-punch \
+  && wget -O ~/.mayohr-auto-punch/.env \
+  https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/.env.example
+
+# Update the .env file with your credentials:
+vi ~/.mayohr-auto-punch/.env
+source ~/.mayohr-auto-punch/.env
+
 # Download the AWS template
 mkdir -p ~/.mayohr-auto-punch/aws \
   && wget -O ~/.mayohr-auto-punch/aws/ecr-template.yaml \
   https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/examples/aws/ecr-template.yaml \
   && wget -O ~/.mayohr-auto-punch/aws/lambda-template.yaml \
   https://raw.githubusercontent.com/awesome-oa-tools/mayohr-auto-punch/main/examples/aws/lambda-template.yaml
-
-source ~/.mayohr-auto-punch/.env
 
 # Create SSM parameters for sensitive data
 aws ssm put-parameter \
@@ -143,6 +150,31 @@ aws cloudformation create-stack \
     ParameterKey=TelegramEnabled,ParameterValue=${TELEGRAM_ENABLED} \
     ParameterKey=TelegramChatId,ParameterValue=${TELEGRAM_CHAT_ID} \
   --capabilities CAPABILITY_IAM
+
+# Trigger the function
+aws lambda invoke \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch \
+  --invocation-type RequestResponse \
+  --payload '{}' \
+  output.json
+
+# Check log
+aws logs describe-log-streams \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --log-group-name /aws/lambda/mayohr-auto-punch \
+  --order-by LastEventTime \
+  --descending \
+  --limit 1 \
+  | jq -r '.logStreams[0].logStreamName' \
+  | xargs -I {} aws logs get-log-events \
+    --no-cli-pager \
+    --region ap-east-2 \
+    --log-group-name /aws/lambda/mayohr-auto-punch \
+    --log-stream-name {} \
+    --limit 100
 ```
 
 ## Telegram Notification (Optional)
