@@ -89,16 +89,24 @@ export class MayohrService {
         const url = new URL(this.secret);
         this.secret = url.searchParams.get("secret") || "";
       }
-      // 生成當前的 TOTP
+      // 產生 TOTP Code
       const totp = authenticator.generate(this.secret);
+
+      // 點選使用其他方式登入
       await this.page.waitForSelector("#idDiv_SAOTCS_HavingTrouble");
       await this.page.click("#idDiv_SAOTCS_HavingTrouble");
+
+      // 點選 TOTP 登入
       await this.page.waitForSelector(
         "#idDiv_SAOTCS_Proofs>div:nth-child(2)>div"
       );
       await this.page.click("#idDiv_SAOTCS_Proofs>div:nth-child(2)>div");
+
+      // 填入 TOTP Code
       await this.page.waitForSelector("#idTxtBx_SAOTCC_OTC");
       await this.page.type("#idTxtBx_SAOTCC_OTC", totp);
+
+      // 送出
       await this.page.click("input#idSubmit_SAOTCC_Continue");
 
       // 是否保持登入
