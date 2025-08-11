@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.0.61](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.0.60...1.0.61) (2025-08-11)
+
 ## [1.0.60](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.0.59...1.0.60) (2025-06-26)
 
 ## [1.0.59](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.0.58...1.0.59) (2025-06-25)
