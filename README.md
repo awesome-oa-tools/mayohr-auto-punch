@@ -4,7 +4,7 @@ Automatic punch in/out system for mayohr
 
 ## Requirements
 
-- Node.js 16+
+- Node.js 20+
 
 ## Usage
 
@@ -30,8 +30,21 @@ npx puppeteer browsers install chrome
 
 ### Run the script
 
+There are two ways to run the script:
+
+#### Option 1: Run from npm package
+
 ```bash
 npx --yes --quite mayohr-auto-punch@latest
+```
+
+#### Option 2: Clone and run locally
+
+```bash
+git clone https://github.com/awesome-oa-tools/mayohr-auto-punch.git
+cd mayohr-auto-punch
+npm install
+npm run dev
 ```
 
 ### Run the script with Crontab
