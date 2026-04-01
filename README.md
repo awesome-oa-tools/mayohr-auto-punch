@@ -190,6 +190,56 @@ aws logs describe-log-streams \
     --limit 100
 ```
 
+## Update Lambda
+
+```bash
+# Get ECR URI
+ECR_URI=$(aws cloudformation describe-stacks \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --stack-name mayohr-auto-punch-ecr \
+  --query "Stacks[0].Outputs[?OutputKey=='RepositoryUri'].OutputValue" \
+  --output text)
+
+# Login to ECR
+aws ecr get-login-password \
+  --no-cli-pager \
+  --region ap-east-2 \
+  | docker login \
+    --username AWS \
+    --password-stdin \
+    ${ECR_URI}
+
+# Pull latest image and push to ECR
+docker pull --platform linux/amd64 justintw/mayohr-auto-punch:latest \
+  && docker tag justintw/mayohr-auto-punch:latest ${ECR_URI}:latest \
+  && docker push ${ECR_URI}:latest
+
+# Update Lambda function
+aws lambda update-function-code \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch \
+  --image-uri ${ECR_URI}:latest
+
+aws lambda wait function-updated \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch
+
+# Update Lambda configuration (required for >= 1.1.0)
+aws lambda update-function-configuration \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch \
+  --memory-size 1024 \
+  --timeout 180 \
+  --image-config '{
+    "EntryPoint": ["node", "/usr/local/lib/node_modules/aws-lambda-ric/index.mjs"],
+    "Command": ["dist/function/index.handler"],
+    "WorkingDirectory": "/var/task"
+  }'
+```
+
 ## Telegram Notification (Optional)
 
 To enable Telegram notifications:
