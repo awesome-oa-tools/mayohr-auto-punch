@@ -56,7 +56,6 @@ jobs:
           git symbolic-ref HEAD refs/heads/main
           git branch --set-upstream-to=origin/main main
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-          npm whoami
           npm run release
 
       - name: Get version
