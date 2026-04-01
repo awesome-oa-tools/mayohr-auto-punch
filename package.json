@@ -21,6 +21,10 @@
     "prepare": "npm run build",
     "release": "release-it --ci"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awesome-oa-tools/mayohr-auto-punch"
+  },
   "homepage": "https://github.com/awesome-oa-tools/mayohr-auto-punch",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1021.0",
