@@ -24,7 +24,7 @@ RUN npm run build
 
 # Production stage
 FROM --platform=$TARGETPLATFORM ghcr.io/puppeteer/puppeteer:24 as production
-WORKDIR /app
+WORKDIR /var/task
 
 # 從 builder 階段複製編譯後的文件和 package.json
 COPY --from=builder /app/dist ./dist
@@ -34,9 +34,9 @@ COPY --from=builder /usr/local/lib/node_modules/aws-lambda-ric /usr/local/lib/no
 
 # 建立 puppeteer 的 cache 目錄
 USER root
-RUN mkdir -p /app/dist/function/.cache/puppeteer
-ENV PUPPETEER_CACHE_DIR=/app/dist/function/.cache/puppeteer
-RUN chown -R pptruser:pptruser /app
+RUN mkdir -p /var/task/dist/function/.cache/puppeteer
+ENV PUPPETEER_CACHE_DIR=/var/task/dist/function/.cache/puppeteer
+RUN chown -R pptruser:pptruser /var/task
 
 # 設置正確的權限
 USER pptruser

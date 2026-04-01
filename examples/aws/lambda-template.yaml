@@ -28,16 +28,17 @@ Resources:
       Code:
         ImageUri: !Ref ImageUri
       Role: !GetAtt LambdaExecutionRole.Arn
-      Timeout: 120
-      MemorySize: 768
+      Timeout: 180
+      MemorySize: 1024
       Architectures:
         - x86_64
       ImageConfig:
         Command:
-          - "index.handler"
+          - "dist/function/index.handler"
         EntryPoint:
-          - "/usr/local/lib/node_modules/aws-lambda-ric/bin/index.mjs"
-        WorkingDirectory: "/app/dist/function"
+          - "node"
+          - "/usr/local/lib/node_modules/aws-lambda-ric/index.mjs"
+        WorkingDirectory: "/var/task"
       Environment:
         Variables:
           HEADLESS: "true"
@@ -46,6 +47,7 @@ Resources:
           TELEGRAM_ENABLED: !Ref TelegramEnabled
           TELEGRAM_CHAT_ID: !Ref TelegramChatId
           NODE_DEBUG: ""
+          SCREENSHOT_S3_BUCKET: !Ref ScreenshotBucket
       LoggingConfig:
         LogGroup: !Ref MayohrAutoPunchLogGroup
 
@@ -77,6 +79,15 @@ Resources:
                   - ssm:GetParameter
                 Resource:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mayohr-auto-punch/*
+        - PolicyName: S3ScreenshotAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::mayohr-auto-punch-screenshots-${AWS::AccountId}/screenshots/*"
         - PolicyName: CloudWatchLogsAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -88,6 +99,16 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/mayohr-auto-punch:*"
+
+  ScreenshotBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "mayohr-auto-punch-screenshots-${AWS::AccountId}"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldScreenshots
+            Status: Enabled
+            ExpirationInDays: 7
 
   MorningPunchRule:
     Type: AWS::Events::Rule

@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { authenticator } from "otplib";
 import { logger } from "../utils/logger";
+import { captureAndUploadScreenshot } from "../utils/screenshot";
 
 export class MayohrService {
   private browser: Browser | null = null;
@@ -27,6 +28,7 @@ export class MayohrService {
       this.browser = await puppeteer.launch({
         headless: this.headless,
         defaultViewport: null,
+        protocolTimeout: 60000,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -34,12 +36,15 @@ export class MayohrService {
           "--disable-gpu",
           "--no-first-run",
           "--no-zygote",
-          "--single-process", // 重要！在 Lambda 中使用單進程模式
           "--disable-extensions",
           "--disable-dev-tools",
           "--disable-software-rasterizer",
           "--ignore-certificate-errors",
           "--window-size=1920,1080",
+          "--user-data-dir=/tmp/chrome-user-data",
+          "--crash-dumps-dir=/tmp/chrome-crashes",
+          "--homedir=/tmp",
+          "--disk-cache-dir=/tmp/chrome-cache",
         ],
       });
 
@@ -63,22 +68,35 @@ export class MayohrService {
       await this.page.waitForSelector(".btn_microsoft>a");
       await this.page.click(".btn_microsoft>a");
 
-      // 輸入網域並前往驗證
+      // 等待跳轉：可能是公司網域輸入頁，也可能直接到 Microsoft 登入頁
       await new Promise((resolve) => setTimeout(resolve, this.delay));
-      await this.page.waitForSelector("input.input-div");
-      await this.page.type("input.input-div", this.domain);
-      await this.page.waitForSelector("button.submit-btn");
-      await this.page.click("button.submit-btn");
+      const matched = await Promise.race([
+        this.page.waitForSelector("input.input-div").then(() => "domain" as const),
+        this.page.waitForSelector("input#i0116").then(() => "ms-login" as const),
+      ]);
+
+      if (matched === "domain") {
+        // 輸入網域並前往驗證
+        await this.page.type("input.input-div", this.domain);
+        await this.page.waitForSelector("button.submit-btn");
+        await this.page.click("button.submit-btn");
+
+        // 等待 MS 帳號輸入頁
+        await new Promise((resolve) => setTimeout(resolve, this.delay));
+        await this.page.waitForSelector("input#i0116");
+      }
 
       // MS 帳號
+      await this.page.click("input#i0116");
       await new Promise((resolve) => setTimeout(resolve, this.delay));
-      await this.page.waitForSelector("input#i0116");
       await this.page.type("input#i0116", this.username);
       await this.page.click("input#idSIButton9");
 
       // MS 密碼
       await new Promise((resolve) => setTimeout(resolve, 4 * this.delay));
       await this.page.waitForSelector("input#i0118");
+      await this.page.click("input#i0118");
+      await new Promise((resolve) => setTimeout(resolve, this.delay));
       await this.page.type("input#i0118", this.password);
       await this.page.click("input#idSIButton9");
 
@@ -123,6 +141,9 @@ export class MayohrService {
         "登入過程發生錯誤:",
         error instanceof Error ? error.message : String(error)
       );
+      if (this.page) {
+        await captureAndUploadScreenshot(this.page, "login-failed");
+      }
       return false;
     }
   }
@@ -160,6 +181,9 @@ export class MayohrService {
         "打卡過程發生錯誤:",
         error instanceof Error ? error.message : String(error)
       );
+      if (this.page) {
+        await captureAndUploadScreenshot(this.page, "punch-failed");
+      }
       return false;
     }
   }
