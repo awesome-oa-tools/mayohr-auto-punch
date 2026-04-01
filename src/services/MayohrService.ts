@@ -1,5 +1,8 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { authenticator } from "otplib";
+import { mkdtempSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 import { logger } from "../utils/logger";
 import { captureAndUploadScreenshot } from "../utils/screenshot";
 
@@ -25,6 +28,9 @@ export class MayohrService {
 
   async init(): Promise<void> {
     try {
+      // 每次建立全新的 user data dir，避免 warm container 殘留 session
+      const userDataDir = mkdtempSync(join(tmpdir(), "chrome-"));
+
       this.browser = await puppeteer.launch({
         headless: this.headless,
         defaultViewport: null,
@@ -41,7 +47,7 @@ export class MayohrService {
           "--disable-software-rasterizer",
           "--ignore-certificate-errors",
           "--window-size=1920,1080",
-          "--user-data-dir=/tmp/chrome-user-data",
+          `--user-data-dir=${userDataDir}`,
           "--crash-dumps-dir=/tmp/chrome-crashes",
           "--homedir=/tmp",
           "--disk-cache-dir=/tmp/chrome-cache",
@@ -110,15 +116,33 @@ export class MayohrService {
       // 產生 TOTP Code
       const totp = authenticator.generate(this.secret);
 
-      // 點選使用其他方式登入
-      await this.page.waitForSelector("#idDiv_SAOTCS_HavingTrouble");
-      await this.page.click("#idDiv_SAOTCS_HavingTrouble");
+      // MFA 驗證：偵測是哪種頁面
+      const mfaType = await Promise.race([
+        // 流程 A：Authenticator push 頁面，需要點「I can't use...」
+        this.page.waitForSelector("#idDiv_SAOTCS_HavingTrouble").then(() => "push" as const),
+        // 流程 B：直接顯示驗證方式選擇（Verify your identity）
+        this.page.waitForFunction(
+          () => document.body.innerText.includes("Verify your identity"),
+          { timeout: 30000 }
+        ).then(() => "choose" as const),
+      ]);
 
-      // 點選 TOTP 登入
-      await this.page.waitForSelector(
-        "#idDiv_SAOTCS_Proofs>div:nth-child(2)>div"
-      );
-      await this.page.click("#idDiv_SAOTCS_Proofs>div:nth-child(2)>div");
+      if (mfaType === "push") {
+        // 點選「I can't use...」
+        await this.page.click("#idDiv_SAOTCS_HavingTrouble");
+        // 點選 TOTP 選項
+        await this.page.waitForSelector(
+          "#idDiv_SAOTCS_Proofs>div:nth-child(2)>div"
+        );
+        await this.page.click("#idDiv_SAOTCS_Proofs>div:nth-child(2)>div");
+      } else {
+        // 點選「Use a verification code」選項
+        await this.page.evaluate(() => {
+          const divs = Array.from(document.querySelectorAll("div[data-value]"));
+          const otpDiv = divs.find((d) => d.textContent?.includes("verification code"));
+          if (otpDiv) (otpDiv as HTMLElement).click();
+        });
+      }
 
       // 填入 TOTP Code
       await this.page.waitForSelector("#idTxtBx_SAOTCC_OTC");
