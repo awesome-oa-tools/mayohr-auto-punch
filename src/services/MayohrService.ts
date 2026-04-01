@@ -212,10 +212,68 @@ export class MayohrService {
     }
   }
 
+  /**
+   * 從瀏覽器 cookie 中取得 __ModuleSessionCookie（JWT，有效 7 天）
+   */
+  async getSessionCookie(): Promise<string | null> {
+    if (!this.page) return null;
+    const cookies = await this.page.cookies("https://apollo.mayohr.com");
+    const session = cookies.find((c) => c.name === "__ModuleSessionCookie");
+    return session?.value || null;
+  }
+
+  /**
+   * 透過 HTTP API 直接打卡，不需要瀏覽器操作
+   * 需要先登入取得 sessionCookie，或傳入快取的 cookie
+   */
+  async punchByApi(sessionCookie?: string): Promise<boolean> {
+    const cookie =
+      sessionCookie || (await this.getSessionCookie());
+    if (!cookie) {
+      logger.error("無法取得 session cookie，請先登入");
+      return false;
+    }
+
+    const punchApiUrl =
+      "https://apollo.mayohr.com/backend/pt/api/checkIn/punch/web";
+
+    try {
+      const response = await fetch(punchApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ActionCode: "Default",
+          FunctionCode: "PunchCard",
+          Cookie: `__ModuleSessionCookie=${cookie}`,
+          Origin: "https://apollo.mayohr.com",
+          Referer: "https://apollo.mayohr.com/ta?id=webpunch",
+        },
+        body: JSON.stringify({
+          AttendanceType: 2,
+          IsOverride: true,
+        }),
+      });
+
+      if (!response.ok) {
+        logger.error(`打卡 API 回傳 ${response.status}`);
+        return false;
+      }
+
+      const data = await response.json();
+      logger.debug("打卡 API 回傳", data);
+      return true;
+    } catch (error) {
+      logger.error(
+        "打卡 API 呼叫失敗:",
+        error instanceof Error ? error.message : String(error)
+      );
+      return false;
+    }
+  }
+
   async close(): Promise<void> {
     if (this.browser) {
       await this.browser.close();
-    } else {
     }
   }
 }

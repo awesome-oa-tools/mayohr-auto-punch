@@ -59,7 +59,12 @@ async function main() {
     }
     logger.info("登入成功");
 
-    const isPunched = await mayohrService.punch();
+    // 優先用 API 打卡，失敗則 fallback 到瀏覽器打卡
+    let isPunched = await mayohrService.punchByApi();
+    if (!isPunched) {
+      logger.warn("API 打卡失敗，改用瀏覽器打卡");
+      isPunched = await mayohrService.punch();
+    }
     if (!isPunched) {
       throw new Error("打卡失敗");
     } else {
