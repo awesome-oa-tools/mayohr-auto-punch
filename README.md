@@ -232,12 +232,12 @@ aws lambda get-function-configuration \
 
 # Invoke Lambda to test
 aws lambda invoke \
+  --no-cli-pager \
   --region ap-east-2 \
   --function-name mayohr-auto-punch \
   --payload '{}' \
   --cli-binary-format raw-in-base64-out \
   /dev/stdout
-
 ```
 
 ## Telegram Notification (Optional)
