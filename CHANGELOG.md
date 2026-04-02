@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.1.2...1.1.3) (2026-04-02)
+
+
+### Bug Fixes
+
+* use correct AttendanceType for clock-in vs clock-out in API punch ([06b49d5](https://github.com/awesome-oa-tools/mayohr-auto-punch/commit/06b49d54f205f2e4ed37df1b602d8d0828490738))
+
 ## [1.1.2](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.1.1...1.1.2) (2026-04-02)
 
 
