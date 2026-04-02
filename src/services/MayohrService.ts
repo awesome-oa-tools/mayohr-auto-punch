@@ -118,8 +118,10 @@ export class MayohrService {
 
       // MFA 驗證：偵測是哪種頁面
       const mfaType = await Promise.race([
-        // 流程 A：Authenticator push 頁面，需要點「I can't use...」
+        // 流程 A：Authenticator push 頁面（"Approve sign in request"），需要切換到其他方式
         this.page.waitForSelector("#idDiv_SAOTCS_HavingTrouble").then(() => "push" as const),
+        // 流程 A2：新版 "Sign in another way" 連結
+        this.page.waitForSelector("#signInAnotherWay").then(() => "signInAnotherWay" as const),
         // 流程 B：直接顯示驗證方式選擇（Verify your identity）
         this.page.waitForFunction(
           () => document.body.innerText.includes("Verify your identity"),
@@ -127,14 +129,51 @@ export class MayohrService {
         ).then(() => "choose" as const),
       ]);
 
-      if (mfaType === "push") {
-        // 點選「I can't use...」
-        await this.page.click("#idDiv_SAOTCS_HavingTrouble");
-        // 點選 TOTP 選項
-        await this.page.waitForSelector(
-          "#idDiv_SAOTCS_Proofs>div:nth-child(2)>div"
+      logger.info(`MFA 頁面類型: ${mfaType}`);
+
+      if (mfaType === "push" || mfaType === "signInAnotherWay") {
+        // 點選「我目前無法使用我的 Outlook 行動裝置應用程式」
+        const clicked = await this.page.evaluate(() => {
+          const links = Array.from(document.querySelectorAll("a"));
+          const cantUseApp = links.find((a) =>
+            a.textContent?.includes("我目前無法使用我的 Outlook 行動裝置應用程式") ||
+            a.textContent?.includes("I can't use my Microsoft Authenticator app") ||
+            a.textContent?.includes("Sign in another way")
+          );
+          if (cantUseApp) { cantUseApp.click(); return cantUseApp.textContent?.trim(); }
+          // 備選：舊版按鈕
+          const btn = document.querySelector("#idDiv_SAOTCS_HavingTrouble") as HTMLElement;
+          if (btn) { btn.click(); return "button"; }
+          return null;
+        });
+        logger.info(`點擊切換驗證方式: ${clicked}`);
+        await new Promise((resolve) => setTimeout(resolve, 2 * this.delay));
+
+        // 截圖：確認切換後的頁面
+        await captureAndUploadScreenshot(this.page, "mfa-switch");
+
+        // 等待「驗證身分識別」頁面載入
+        await this.page.waitForFunction(
+          () => document.body.innerText.includes("驗證身分識別") || document.body.innerText.includes("Verify your identity"),
+          { timeout: 15000 }
         );
-        await this.page.click("#idDiv_SAOTCS_Proofs>div:nth-child(2)>div");
+        await new Promise((resolve) => setTimeout(resolve, this.delay));
+
+        // 點選「使用驗證碼」選項
+        const selectedMethod = await this.page.evaluate(() => {
+          const allClickable = Array.from(document.querySelectorAll("div[data-value], a, button"));
+          const otpOption = allClickable.find((el) =>
+            el.textContent?.includes("使用驗證碼") ||
+            el.textContent?.includes("verification code") ||
+            el.textContent?.includes("Use a code")
+          );
+          if (otpOption) { (otpOption as HTMLElement).click(); return otpOption.textContent?.trim(); }
+          // 舊版：直接用 Proofs 清單
+          const proofOption = document.querySelector("#idDiv_SAOTCS_Proofs>div:nth-child(2)>div") as HTMLElement;
+          if (proofOption) { proofOption.click(); return "legacy-proof"; }
+          return null;
+        });
+        logger.info(`選擇的驗證方式: ${selectedMethod}`);
       } else {
         // 點選「Use a verification code」選項
         await this.page.evaluate(() => {
@@ -144,9 +183,16 @@ export class MayohrService {
         });
       }
 
-      // 填入 TOTP Code
-      await this.page.waitForSelector("#idTxtBx_SAOTCC_OTC");
-      await this.page.type("#idTxtBx_SAOTCC_OTC", totp);
+      await new Promise((resolve) => setTimeout(resolve, 2 * this.delay));
+
+      // 填入 TOTP Code（支援新舊版 selector）
+      await this.page.waitForSelector("#idTxtBx_SAOTCC_OTC, input[name='otc']", { timeout: 15000 });
+      const otcSelector = await this.page.evaluate(() => {
+        if (document.querySelector("#idTxtBx_SAOTCC_OTC")) return "#idTxtBx_SAOTCC_OTC";
+        if (document.querySelector("input[name='otc']")) return "input[name='otc']";
+        return "#idTxtBx_SAOTCC_OTC"; // fallback
+      });
+      await this.page.type(otcSelector, totp);
 
       // 送出
       await this.page.click("input#idSubmit_SAOTCC_Continue");
