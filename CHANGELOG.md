@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.2.0](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.1.3...1.2.0) (2026-04-02)
+
+
+### Features
+
+* log package version at Lambda handler startup ([98a0078](https://github.com/awesome-oa-tools/mayohr-auto-punch/commit/98a00785ffffd545f8220057fd232719466d1217))
+
 ## [1.1.3](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.1.2...1.1.3) (2026-04-02)
 
 
