@@ -222,22 +222,11 @@ aws lambda update-function-code \
   --function-name mayohr-auto-punch \
   --image-uri ${ECR_URI}:latest
 
-aws lambda wait function-updated \
-  --region ap-east-2 \
-  --function-name mayohr-auto-punch
-
-# Update Lambda configuration (required for >= 1.1.0)
-aws lambda update-function-configuration \
+aws lambda update-function-code \
   --no-cli-pager \
   --region ap-east-2 \
   --function-name mayohr-auto-punch \
-  --memory-size 1024 \
-  --timeout 180 \
-  --image-config '{
-    "EntryPoint": ["node", "/usr/local/lib/node_modules/aws-lambda-ric/index.mjs"],
-    "Command": ["dist/function/index.handler"],
-    "WorkingDirectory": "/var/task"
-  }'
+  --image-uri ${ECR_URI}:latest
 ```
 
 ## Telegram Notification (Optional)
