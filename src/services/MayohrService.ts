@@ -138,6 +138,7 @@ export class MayohrService {
           const cantUseApp = links.find((a) =>
             a.textContent?.includes("我目前無法使用我的 Outlook 行動裝置應用程式") ||
             a.textContent?.includes("I can't use my Microsoft Authenticator app") ||
+            a.textContent?.includes("I can't use my Outlook mobile app right now") ||
             a.textContent?.includes("Sign in another way")
           );
           if (cantUseApp) { cantUseApp.click(); return cantUseApp.textContent?.trim(); }
