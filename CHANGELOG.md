@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.2.0...1.2.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* add English Outlook mobile app link text for MFA switch ([abac0b9](https://github.com/awesome-oa-tools/mayohr-auto-punch/commit/abac0b916f3fb31612716b35eba939cdd0d0fe78))
+
 # [1.2.0](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.1.3...1.2.0) (2026-04-02)
 
 
