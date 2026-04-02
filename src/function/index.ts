@@ -3,6 +3,8 @@ import { MayohrService } from "../services/MayohrService";
 import { TelegramService } from "../services/TelegramService";
 import { Notifier } from "../utils/notifier";
 import { isHoliday } from '../utils/holiday';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version } = require('../../package.json');
 
 const ssmClient = new SSMClient({ region: process.env.AWS_REGION });
 async function getParameter(name: string): Promise<string> {
@@ -15,6 +17,7 @@ async function getParameter(name: string): Promise<string> {
 }
 
 export const handler = async (event: any, context: any) => {
+  console.info(`mayohr-auto-punch v${version}`);
   let mayohrService = null;
   try {
 
