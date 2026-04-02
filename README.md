@@ -221,6 +221,23 @@ aws lambda update-function-code \
   --region ap-east-2 \
   --function-name mayohr-auto-punch \
   --image-uri ${ECR_URI}:latest
+
+# ⏳ Wait ~2 minutes for the Lambda function update to complete before invoking.
+# You can check the status with:
+aws lambda get-function-configuration \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch \
+  --query 'LastUpdateStatus'
+
+# Invoke Lambda to test
+aws lambda invoke \
+  --region ap-east-2 \
+  --function-name mayohr-auto-punch \
+  --payload '{}' \
+  --cli-binary-format raw-in-base64-out \
+  /dev/stdout
+
 ```
 
 ## Telegram Notification (Optional)
