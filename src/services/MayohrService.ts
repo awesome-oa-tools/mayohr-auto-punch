@@ -294,10 +294,11 @@ export class MayohrService {
           Origin: "https://apollo.mayohr.com",
           Referer: "https://apollo.mayohr.com/ta?id=webpunch",
         },
-        body: JSON.stringify({
-          AttendanceType: 2,
-          IsOverride: true,
-        }),
+        body: JSON.stringify(
+          new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" })).getHours() < 12
+            ? { AttendanceType: 1, IsOverride: false }
+            : { AttendanceType: 2, IsOverride: true }
+        ),
       });
 
       if (!response.ok) {
