@@ -221,12 +221,6 @@ aws lambda update-function-code \
   --region ap-east-2 \
   --function-name mayohr-auto-punch \
   --image-uri ${ECR_URI}:latest
-
-aws lambda update-function-code \
-  --no-cli-pager \
-  --region ap-east-2 \
-  --function-name mayohr-auto-punch \
-  --image-uri ${ECR_URI}:latest
 ```
 
 ## Telegram Notification (Optional)
