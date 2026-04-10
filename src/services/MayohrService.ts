@@ -120,8 +120,12 @@ export class MayohrService {
       const mfaType = await Promise.race([
         // 流程 A：Authenticator push 頁面（"Approve sign in request"），需要切換到其他方式
         this.page.waitForSelector("#idDiv_SAOTCS_HavingTrouble").then(() => "push" as const),
-        // 流程 A2：新版 "Sign in another way" 連結
+        // 流程 A2：新版 "Sign in another way" 連結（by ID 或 by 文字）
         this.page.waitForSelector("#signInAnotherWay").then(() => "signInAnotherWay" as const),
+        this.page.waitForFunction(
+          () => Array.from(document.querySelectorAll("a")).some((a) => a.textContent?.includes("Sign in another way")),
+          { timeout: 30000 }
+        ).then(() => "signInAnotherWay" as const),
         // 流程 B：直接顯示驗證方式選擇（Verify your identity）
         this.page.waitForFunction(
           () => document.body.innerText.includes("Verify your identity"),
