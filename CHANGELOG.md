@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.2.1...1.2.2) (2026-04-10)
+
+
+### Bug Fixes
+
+* detect MFA "Sign in another way" link by text content ([1604367](https://github.com/awesome-oa-tools/mayohr-auto-punch/commit/16043679a4986a0309d894b928aadcdd17eac180)), closes [#signInAnotherWay](https://github.com/awesome-oa-tools/mayohr-auto-punch/issues/signInAnotherWay)
+
 ## [1.2.1](https://github.com/awesome-oa-tools/mayohr-auto-punch/compare/1.2.0...1.2.1) (2026-04-02)
 
 
