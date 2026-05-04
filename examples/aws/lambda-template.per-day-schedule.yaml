@@ -1,0 +1,280 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "MayoHR Auto Punch Lambda Function"
+
+Parameters:
+  ImageUri:
+    Type: String
+    Description: "Your Docker image URI"
+  MsDomain:
+    Type: String
+    Description: "Your Microsoft domain"
+  MsUsername:
+    Type: String
+    Description: "Your Microsoft username"
+  TelegramEnabled:
+    Type: String
+    Description: "Enable Telegram notification?"
+    Default: "false"
+  TelegramChatId:
+    Type: String
+    Description: "Your Telegram chat ID"
+
+Resources:
+  MayohrAutoPunchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: mayohr-auto-punch
+      PackageType: Image
+      Code:
+        ImageUri: !Ref ImageUri
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 120
+      MemorySize: 768
+      Architectures:
+        - x86_64
+      ImageConfig:
+        Command:
+          - "index.handler"
+        EntryPoint:
+          - "/usr/local/lib/node_modules/aws-lambda-ric/bin/index.mjs"
+        WorkingDirectory: "/app/dist/function"
+      Environment:
+        Variables:
+          HEADLESS: "true"
+          MS_DOMAIN: !Ref MsDomain
+          MS_USERNAME: !Ref MsUsername
+          TELEGRAM_ENABLED: !Ref TelegramEnabled
+          TELEGRAM_CHAT_ID: !Ref TelegramChatId
+          NODE_DEBUG: ""
+      LoggingConfig:
+        LogGroup: !Ref MayohrAutoPunchLogGroup
+
+  MayohrAutoPunchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/mayohr-auto-punch"
+      RetentionInDays: 5
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mayohr-auto-punch/*
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/mayohr-auto-punch:*"
+
+  MonMorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-mon-morning-punch
+      Description: "Trigger morning punch at 9:18 AM on Monday"
+      ScheduleExpression: "cron(18 1 ? * MON *)" # UTC 1:18 = GMT+8 9:18
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: MonMorningPunchTarget
+
+  MonEveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-mon-evening-punch
+      Description: "Trigger evening punch at 6:21 PM on Monday"
+      ScheduleExpression: "cron(21 10 ? * MON *)" # UTC 10:21 = GMT+8 18:21
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: MonEveningPunchTarget
+
+  TueMorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-tue-morning-punch
+      Description: "Trigger morning punch at 9:21 AM on Tuesday"
+      ScheduleExpression: "cron(21 1 ? * TUE *)" # UTC 1:21 = GMT+8 9:21
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: TueMorningPunchTarget
+
+  TueEveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-tue-evening-punch
+      Description: "Trigger evening punch at 6:24 PM on Tuesday"
+      ScheduleExpression: "cron(24 10 ? * TUE *)" # UTC 10:24 = GMT+8 18:24
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: TueEveningPunchTarget
+
+  WedMorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-wed-morning-punch
+      Description: "Trigger morning punch at 9:16 AM on Wednesday"
+      ScheduleExpression: "cron(16 1 ? * WED *)" # UTC 1:16 = GMT+8 9:16
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: WedMorningPunchTarget
+
+  WedEveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-wed-evening-punch
+      Description: "Trigger evening punch at 6:19 PM on Wednesday"
+      ScheduleExpression: "cron(19 10 ? * WED *)" # UTC 10:19 = GMT+8 18:19
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: WedEveningPunchTarget
+
+  ThuMorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-thu-morning-punch
+      Description: "Trigger morning punch at 9:15 AM on Thursday"
+      ScheduleExpression: "cron(15 1 ? * THU *)" # UTC 1:15 = GMT+8 9:15
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: ThuMorningPunchTarget
+
+  ThuEveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-thu-evening-punch
+      Description: "Trigger evening punch at 6:18 PM on Thursday"
+      ScheduleExpression: "cron(18 10 ? * THU *)" # UTC 10:18 = GMT+8 18:18
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: ThuEveningPunchTarget
+
+  FriMorningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-fri-morning-punch
+      Description: "Trigger morning punch at 9:17 AM on Friday"
+      ScheduleExpression: "cron(17 1 ? * FRI *)" # UTC 1:17 = GMT+8 9:17
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: FriMorningPunchTarget
+
+  FriEveningPunchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mayohr-fri-evening-punch
+      Description: "Trigger evening punch at 6:23 PM on Friday"
+      ScheduleExpression: "cron(23 10 ? * FRI *)" # UTC 10:23 = GMT+8 18:23
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MayohrAutoPunchFunction.Arn
+          Id: FriEveningPunchTarget
+
+  MonMorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt MonMorningPunchRule.Arn
+
+  MonEveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt MonEveningPunchRule.Arn
+
+  TueMorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt TueMorningPunchRule.Arn
+
+  TueEveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt TueEveningPunchRule.Arn
+
+  WedMorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt WedMorningPunchRule.Arn
+
+  WedEveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt WedEveningPunchRule.Arn
+
+  ThuMorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ThuMorningPunchRule.Arn
+
+  ThuEveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ThuEveningPunchRule.Arn
+
+  FriMorningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt FriMorningPunchRule.Arn
+
+  FriEveningPunchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MayohrAutoPunchFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt FriEveningPunchRule.Arn

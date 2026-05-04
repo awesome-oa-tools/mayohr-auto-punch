@@ -240,6 +240,28 @@ aws lambda invoke \
   /dev/stdout
 ```
 
+## Update Password
+
+> 公司通常每三個月要更換一次密碼，更新密碼後請同步更新 SSM Parameter Store。
+
+```bash
+# Update the .env file with the new password:
+vi ~/.mayohr-auto-punch/.env
+# 修改 MS_PASSWORD="your_new_password"
+
+# Load the new password into shell environment
+source ~/.mayohr-auto-punch/.env
+
+# Update SSM parameter with the new password
+aws ssm put-parameter \
+  --no-cli-pager \
+  --region ap-east-2 \
+  --name "/mayohr-auto-punch/ms-password" \
+  --value "${MS_PASSWORD}" \
+  --type "SecureString" \
+  --overwrite
+```
+
 ## Telegram Notification (Optional)
 
 To enable Telegram notifications:
